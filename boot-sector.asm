@@ -1,8 +1,11 @@
-%define LOAD_ADDRESS 0x7C00     ; this being a multiple of 0x10 is assumed
-;;%define N            0x10000
-;;^^^^^^^^^ is there a convention to declare im excpecting this from the outside
+;; read the N bytes above ourselves (storage);
+;; write the N bytes above ourselves (memory)
+
+;; where BIOS put us (this being a multiple of 0x10 is assumed)
+%define LOAD_ADDRESS 0x7C00
 
 [BITS 16]
+
 	cli
 
 	; us above, stack below
@@ -12,8 +15,6 @@
 	xor ax, ax
 	mov ss, ax
 	mov sp, LOAD_ADDRESS
-	;mov bp, sp
-
 
 	; reading FLOPPY sectors, bios gave us DL (drive number)
 	mov ch, 0                             ; C*, floppy: [0, 79]
@@ -22,6 +23,7 @@
 
 	mov di, (LOAD_ADDRESS + 0x200) / 0x10 ; reading destination
 	mov si, (N + 0x1ff) / 0x200           ; remaining unread sectors
+	;          ^ ...so this division doesn't round down
 
 read_sector:
 	; reading one sector at a time by moving the extra segment (no offset)
@@ -80,7 +82,7 @@ party:
 	jmp party
 
 
+times 510-($-$$) db 0
 signature:
-	times 510-($-$$) db 0
 	db 0b01010101
 	db 0b10101010
