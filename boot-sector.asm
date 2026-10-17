@@ -3,16 +3,16 @@
 
 ;; where BIOS put us (this being a multiple of 0x10 is assumed)
 %define LOAD_ADDRESS 0x7C00
+;;TODO move this to inside the Makefile maybe
+
 
 [BITS 16]
 
 	cli
 
 	; us above, stack below
-	mov ax, LOAD_ADDRESS / 0x10
-	mov ds, ax
-
 	xor ax, ax
+	mov ds, ax
 	mov ss, ax
 	mov sp, LOAD_ADDRESS
 
@@ -32,6 +32,8 @@ read_sector:
 	mov es, di
 	mov bx, 0
 	int 0x13
+
+;;HWNOTE: multiple attempts -- also probably won't be a CHS
 
 	; handle reading error
 	jc party
@@ -64,11 +66,6 @@ read_sector:
 	jmp party
 
 
-read_fin:
-halt:
-	hlt
-
-
 party:
 	mov ah, 0x0B
 	;xor bh, bh
@@ -80,6 +77,56 @@ party:
 	int 0x10
 
 	jmp party
+
+
+[EXTERN kernel_entry]
+read_fin:
+	; set up the basic flat memory model and go to kernel ! 32 bits!
+	cld
+	lgdt [gdtd]
+
+;;HWNOTE: A20
+
+	; ENABLE PROTECTED MODE
+	mov eax, CR0
+	or eax, 1
+	mov CR0, eax
+
+;;HWNOTE: cli
+
+	; GO GO GO !!!!!!!
+	mov ax, 8
+	mov SS, ax
+	mov DS, ax
+	mov ES, ax
+	mov FS, ax
+	mov GS, ax
+
+	call 16:kernel_entry
+
+
+gdtd:
+	dw 0x17
+	dd gdt
+
+align 8
+gdt:
+	; nil
+	dq 0
+
+	; data
+	;    +base2-+ B V    P	S E A			     +-----lmt1-----+
+	;	     G 0 lmt2 PL X W +---------base1--------+
+	dq 0b0000000011001111100100100000000000000000000000001111111111111111
+	;    3210987654321098765432109876543210987654321098765432109876543210
+	;    FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210
+
+	; code
+	;    +base2-+ D V    P	S C A			     +-----lmt1-----+
+	;	     G 0 lmt2 PL X R +---------base1--------+
+	dq 0b0000000011001111100110100000000000000000000000001111111111111111
+	;    3210987654321098765432109876543210987654321098765432109876543210
+	;    FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210
 
 
 times 510-($-$$) db 0

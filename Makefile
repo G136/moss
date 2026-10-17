@@ -1,34 +1,37 @@
-N = $$(( 0x67001 ))
+define CC
+gcc -std=c99 -m32 -O2 -ffreestanding -no-pie -fno-pie -fno-stack-protector -mno-sse
+endef
+AS = nasm -f elf
+LD = ld -m elf_i386 -T linker-script.ld
+OBJCOPY = objcopy -I elf32-i386 -O binary
 
+QEMU = qemu-system-i386 -cpu pentium2 -m 1g -device VGA
+
+# collect the byte counts of all present .o files, return the last (total) one
+OBJECT_BYTES = wc --bytes *.o | cut -f1 --whitespace-delimited=trimmed | tail -n 1
+
+
+.PHONY: all clean build test debug
 all: clean build test
 
 clean:
+	rm -f *.o
 	rm -f *.bin
-	rm -f *.img
-
-	rm -f payload paidload
 
 build: clean
-	nasm -f bin boot-sector.asm -o boot-sector.bin -dN=$N
-	dd if=/dev/random of=payload bs=1 count=$N
+	$(AS)    kernel.asm      -o kernel-asm.o
+	$(CC) -c kernel.c        -o kernel.o
 
-	dd if=/dev/zero          of=boot.img bs=1024 count=1440
-	dd if=boot-sector.bin    of=boot.img conv=notrunc
-	dd if=payload            of=boot.img conv=notrunc seek=1
+	$(AS)    boot-sector.asm -o boot-sector.o -dN=$$($(OBJECT_BYTES))
+
+	$(LD) *.o -o elf.bin
+	$(OBJCOPY) elf.bin img.bin
+#TODO assert the generated bin is actually under that ^^ OBJECT_BYTES +512 ?
 
 test: build
-	qemu-system-i386 -cpu pentium2 -m 1g \
-		-fda img.bin -device VGA
-#TODO somehow make it do the
-# [monitor]$ pmemsave 0x7e00 $N paidload
-#                     ^^^^^^ this could also be defined here!
-#          $ cmp paidload payload
-# by itself
+	$(QEMU) -fda img.bin
 
 debug: build
-	qemu-system-i386 -cpu pentium2 -m 1g \
-		-fda img.bin -device VGA -s -S #&
-#	-monitor stdio
+	$(QEMU) -fda img.bin -s -S #&
+#		-monitor stdio
 #	gdb
-
-.PHONY: all clean build test debug
