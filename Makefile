@@ -1,6 +1,5 @@
-define CC
-gcc -std=c99 -m32 -O2 -ffreestanding -no-pie -fno-pie -fno-stack-protector -mno-sse
-endef
+CC = gcc -std=c99 -m32 -O2 -ffreestanding \
+	-no-pie -fno-pie -fno-stack-protector -mno-sse
 AS = nasm -f elf
 LD = ld -m elf_i386 -T linker-script.ld
 OBJCOPY = objcopy -I elf32-i386 -O binary
@@ -8,7 +7,9 @@ OBJCOPY = objcopy -I elf32-i386 -O binary
 QEMU = qemu-system-i386 -cpu pentium2 -m 1g -device VGA
 
 # collect the byte counts of all present .o files, return the last (total) one
-OBJECT_BYTES = wc --bytes *.o | cut -f1 --whitespace-delimited=trimmed | tail -n 1
+OBJECT_BYTES = wc --bytes *.o \
+	| cut -f1 --whitespace-delimited=trimmed \
+	| tail -n 1
 
 
 .PHONY: all clean build test debug
