@@ -1,5 +1,6 @@
-CC = gcc -std=c99 -m32 -O2 -ffreestanding \
+CC = gcc -m32 -O2 -ffreestanding \
 	-no-pie -fno-pie -fno-stack-protector -mno-sse
+# -std=c99/gnu99
 AS = nasm -f elf
 LD = ld -m elf_i386 -T linker-script.ld
 OBJCOPY = objcopy -I elf32-i386 -O binary
@@ -20,8 +21,11 @@ clean:
 	rm -f *.bin
 
 build: clean
-	$(AS)    kernel.asm      -o kernel-asm.o
-	$(CC) -c kernel.c        -o kernel.o
+#	$(AS)    kernel.asm      -o kernel-asm.o
+#	$(CC) -c kernel.c        -o kernel.o
+	$(CC) -c *.c
+
+	$(AS)    movinit.asm      -o kernel-asm.o
 
 	$(AS)    boot-sector.asm -o boot-sector.o -dN=$$($(OBJECT_BYTES))
 
