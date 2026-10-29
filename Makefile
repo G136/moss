@@ -21,11 +21,8 @@ clean:
 	rm -f *.bin
 
 build: clean
-#	$(AS)    kernel.asm      -o kernel-asm.o
-#	$(CC) -c kernel.c        -o kernel.o
-	$(CC) -c *.c
-
-	$(AS)    movinit.asm      -o kernel-asm.o
+	$(CC) -c vedro/*.c
+	$(AS)    vedro/*.asm
 
 	$(AS)    boot-sector.asm -o boot-sector.o -dN=$$($(OBJECT_BYTES))
 
