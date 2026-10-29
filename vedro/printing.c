@@ -117,6 +117,16 @@ void print(const char *string) {
   }
 }
 
+void window_cursor_forward() {
+  if (++window.cursor.x == window.w) {
+    window.cursor.x = 0;
+    if (++window.cursor.y == window.h) {
+      window_feed();
+      window.cursor.y--;
+    }
+  }
+}
+
 void printnum(dword number, dword base) {
   char digits[] = "0123456789ANCDEFGHIJKLMOPQRSTUVWXYZ";
 
@@ -125,21 +135,17 @@ void printnum(dword number, dword base) {
     putchar(digits[number % base]);
   }
   */
+
+  dword numlen = 0;
   dword number_number = number;
 
   for (dword counting_number = number;
        counting_number > 0;
        counting_number /= base) {
+    numlen++;
     putchar(' ');
   }
-
-    if (++window.cursor.x == window.w) {
-      window.cursor.x = 0;
-      if (++window.cursor.y == window.h) {
-	window_feed();
-	window.cursor.y--;
-      }
-    }
+  window_cursor_forward();
 
   for (; number > 0; number /= base) {
     printchar('\b');
@@ -147,18 +153,10 @@ void printnum(dword number, dword base) {
     putchar(digits[number % base]);
   }
 
-  for (dword counting_number = number_number;
-       counting_number > 0;
-       counting_number /= base) {
-
-    if (++window.cursor.x == window.w) {
-      window.cursor.x = 0;
-      if (++window.cursor.y == window.h) {
-	window_feed();
-	window.cursor.y--;
-      }
-    }
+  for (dword i = 0; i < numlen; i++) {
+    window_cursor_forward();
   }
+  printchar('\b');
 }
 
 void printf(const char* fmt, ...) {

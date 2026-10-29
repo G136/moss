@@ -37,8 +37,9 @@ void kernel_entry() {
 	      VGA_TEXT_WIDTH / 2,
 	      VGA_TEXT_HEIGHT / 2);
 
-  printf("Helo\blo \n\r World! %c %s\n\r %x, %d",
+  printf("Helo\blo \n\r World! %c %s\n\r %x, %d.",
 	 '\2', "MOM\nMA", 0xDEAD, 12345);
+  //asm("hlt");
 
   for (dword i = 1;; i++) {
     dword size      = i * 1000;
