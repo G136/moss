@@ -8,19 +8,25 @@ struct {
   } cursor;
 } window;
 
-// A WINDOW_DO(statements) MACRO?????????
+#define WINDOW_DO(STATEMENTS)			\
+  for (window.cursor.x = 0;		        \
+       window.cursor.x < window.w;		\
+       window.cursor.x++) {			\
+    for (window.cursor.y = 0;			\
+	 window.cursor.y < window.h;		\
+	 window.cursor.y++) { STATEMENTS }	\
+  }
+
+#define WINDOW_CURSOR_VGA_TEXT_X window.x + window.cursor.x
+#define WINDOW_CURSOR_VGA_TEXT_Y window.y + window.cursor.y
+
+#define WINDOW_CHAR_AT_CURSOR \
+  VGA_CHAR_AT(WINDOW_CURSOR_VGA_TEXT_X, WINDOW_CURSOR_VGA_TEXT_Y)
+
 void window_clear() {
+  WINDOW_DO(WINDOW_CHAR_AT_CURSOR = ' ';)
   window.cursor.x = 0;
   window.cursor.y = 0;
-  
-  for (dword x = 0; x < window.w; x++) {
-    for (dword y = 0; y < window.h; y++) {
-      dword loc_x = window.x + x;
-      dword loc_y = window.y + y;
-      
-      VGA_CHAR_AT(loc_x, loc_y) = ' ';
-    }
-  }
 }
 
 void window_init(dword x, dword y, dword w, dword h) {
@@ -28,37 +34,29 @@ void window_init(dword x, dword y, dword w, dword h) {
   window.y = y;
   window.w = w;
   window.h = h;
-  
-  window.cursor.x = 0;
-  window.cursor.y = 0;
-  
-  for (dword x = 0; x < w; x++) {
-    for (dword y = 0; y < h; y++) {
-      dword loc_x = window.x + x;
-      dword loc_y = window.y + y;
-      
-      vga_set_bg_col(BLACK, loc_x, loc_y);
-      vga_set_fg_col(WHITE, loc_x, loc_y);
-      VGA_CHAR_AT(loc_x, loc_y) = (byte)(x ^ y);
-    }
-  }
+
+  WINDOW_DO(vga_set_bg_col(BLACK,					\
+			   WINDOW_CURSOR_VGA_TEXT_X,			\
+			   WINDOW_CURSOR_VGA_TEXT_Y);			\
+	    vga_set_fg_col(WHITE,					\
+			   WINDOW_CURSOR_VGA_TEXT_X,			\
+			   WINDOW_CURSOR_VGA_TEXT_Y);			\
+	    WINDOW_CHAR_AT_CURSOR =					\
+	    (byte)(WINDOW_CURSOR_VGA_TEXT_X ^ WINDOW_CURSOR_VGA_TEXT_Y);)
   window_clear();
 }
 
 void window_feed() {
-  for (dword x = 0; x < window.w; x++) {
-    for (dword y = 0; y < window.h - 1; y++) {
-      dword loc_x = window.x + x;
-      dword loc_y = window.y + y;
-      VGA_CHAR_AT(loc_x, loc_y) = VGA_CHAR_AT(loc_x, loc_y + 1);
-    }
-  }
+  WINDOW_DO(if (window.cursor.y == window.h - 2) break;			\
+	    VGA_CHAR_AT(WINDOW_CURSOR_VGA_TEXT_X,			\
+			WINDOW_CURSOR_VGA_TEXT_Y) =			\
+	    VGA_CHAR_AT(WINDOW_CURSOR_VGA_TEXT_X,			\
+			WINDOW_CURSOR_VGA_TEXT_Y + 1);)
 }
 
 
 void putchar(char c) {
-  // this could be a.... MACCRO !!!
-  VGA_CHAR_AT(window.x + window.cursor.x, window.y + window.cursor.y) = c;
+  WINDOW_CHAR_AT_CURSOR = c;
 
   if (++window.cursor.x == window.w) {
     window.cursor.x = 0;
