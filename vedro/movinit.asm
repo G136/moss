@@ -34,8 +34,8 @@ memzero:
 	mov edi, dword [esp + 8]
 	mov ecx, dword [esp + 12]
 	mov al, 0
-	
+
 	rep stosb
-	
+
 	pop edi
 	ret

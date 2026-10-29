@@ -2,7 +2,7 @@
 
 #define PANIC(...)		    \
   asm("cli");			    \
-  window_clear();		    \
+  /* window_clear(); */		    \
   print("!!!! ");		    \
   printf(__VA_ARGS__);		    \
   asm("hlt")
