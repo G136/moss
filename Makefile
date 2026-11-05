@@ -1,5 +1,5 @@
-CC = gcc -m32 -O2 -ffreestanding \
-	-no-pie -fno-pie -fno-stack-protector -mno-sse
+CC = gcc -std=c23 -m32 -O2 -ffreestanding \
+	-no-pie -fno-pie -fno-stack-protector -mgeneral-regs-only
 # -std=c99/gnu99
 AS = nasm -f elf
 LD = ld -m elf_i386 -T linker-script.ld
@@ -22,10 +22,11 @@ clean:
 
 build: clean
 	$(CC) -c vedro/*.c
-	$(AS)    vedro/*.asm
+	$(AS)    vedro/cpu.asm   -o cpu.o
 
 	$(AS)    boot-sector.asm -o boot-sector.o -dN=$$($(OBJECT_BYTES))
 
+#FIXME vvvvvv searches .o files in .
 	$(LD) *.o -o elf.bin
 	$(OBJCOPY) elf.bin img.bin
 #TODO assert the generated bin is actually under that ^^ OBJECT_BYTES +512 ?

@@ -2,6 +2,7 @@
 #include "vga.h"
 #include "alloc.h"
 #include "printing.h"
+#include "cpu.h"
 
 //#define DEBUG
 #include "panic-and-assert.h"
@@ -39,7 +40,7 @@ void kernel_entry() {
 
   printf("Helo\blo \n\r World! %c %s\n\r %x, %d.",
 	 '\2', "MOM\nMA", 0xDEAD, 12345);
-  //asm("hlt");
+  //cpu_hlt();
 
   for (dword i = 1;; i++) {
     dword size      = i * 1000;
@@ -57,5 +58,5 @@ void kernel_entry() {
     wait();
   }
 
-  asm("hlt");
+  cpu_hlt();
 }

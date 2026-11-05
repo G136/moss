@@ -1,11 +1,12 @@
+#include "cpu.h"
 #include "printing.h"
 
 #define PANIC(...)		    \
-  asm("cli");			    \
+  cpu_cli();			    \
   /* window_clear(); */		    \
   print("!!!! ");		    \
   printf(__VA_ARGS__);		    \
-  asm("hlt")
+  cpu_hlt();
 
 //#ifdef DEBUG
 #define ASSERT(cond)						\
